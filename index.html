@@ -1,0 +1,1851 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>處置預測&結果</title>
+<style>
+:root{
+  --bg:#f8f6f0;
+  --surface:#ffffff;
+  --line:#c9c9c9;
+  --line-soft:#dedede;
+  --text:#111111;
+  --muted:#6b7280;
+  --muted-2:#8793a0;
+  --blue:#2c5aa0;
+  --blue-dark:#214a86;
+  --ink:#111111;
+  --cyan:#2563eb;
+  --violet:#5b5a99;
+  --green:#1d7040;
+  --green-bg:#edf8f0;
+  --amber:#8a6200;
+  --amber-bg:#fff7df;
+  --red:#a12b2b;
+  --red-bg:#fff0f0;
+  --gray-bg:#f6f8fa;
+  --ui-font:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft JhengHei",sans-serif;
+  --table-font:"DFKai-SB","BiauKai","標楷體","Kaiti TC","Microsoft JhengHei",serif;
+}
+*{box-sizing:border-box}
+html{overflow-y:scroll}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--table-font);
+  font-size:16px;
+}
+button,input{font:inherit}
+button{
+  border:0;
+  background:var(--blue);
+  color:#fff;
+  border-radius:4px;
+  padding:7px 14px;
+  cursor:pointer;
+  font-weight:600;
+}
+button:hover{background:var(--blue-dark)}
+button.secondary{
+  background:#fff;
+  color:var(--blue);
+  border:2px solid var(--blue);
+  padding:5px 14px;
+}
+button.secondary:hover{background:#f4f7f9}
+button.ghost{
+  background:transparent;
+  color:var(--blue-dark);
+  border-color:transparent;
+}
+button.ghost:hover{background:#e8f1f6}
+button.active{
+  background:var(--blue);
+  color:#fff;
+  border:2px solid var(--blue);
+  padding:5px 14px;
+}
+button:disabled{opacity:.55;cursor:not-allowed}
+.spinner{
+  display:none;
+  width:16px;
+  height:16px;
+  border:2px solid rgba(255,255,255,.45);
+  border-top-color:#fff;
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+.refreshing .spinner{display:inline-block}
+.refreshing .btntext{display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.app{max-width:1320px;margin:0 auto;padding:12px}
+.topbar{
+  font-family:var(--ui-font);
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  align-items:center;
+  max-width:1320px;
+  margin:0 auto 14px;
+  padding:12px 18px;
+  border-bottom:1px solid var(--line);
+  background:#ffffff;
+}
+.brand h1{margin:0;font-size:20px;line-height:1.2;letter-spacing:0}
+.brand p{display:none}
+.topmeta{text-align:right;color:var(--muted);font-size:13px;line-height:1.6}
+.topstatus{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
+  white-space:nowrap;
+}
+.modepill{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:4px 9px;
+  border-radius:999px;
+  background:#eef2ff;
+  border:1px solid #c7d2fe;
+  color:#1e3a8a;
+  font-weight:700;
+}
+.modepill:before{
+  content:"";
+  width:8px;
+  height:8px;
+  border-radius:99px;
+  background:var(--cyan);
+}
+.toolbar{
+  font-family:var(--ui-font);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  border:1px solid var(--line);
+  background:var(--surface);
+  border-radius:4px;
+  padding:8px 10px;
+  max-width:1320px;
+  margin:0 auto 12px;
+}
+.lefttools,.righttools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dateinput{
+  width:172px;
+  border:1px solid var(--line);
+  border-radius:3px;
+  padding:4px 5px;
+  background:#fff;
+  color:var(--text);
+}
+.hint{color:var(--muted);font-size:12px}
+.page{display:none}
+.page.active{display:block;min-height:760px}
+.grid{
+  font-family:var(--ui-font);
+  display:grid;
+  grid-template-columns:420px 1fr;
+  gap:12px;
+  max-width:1320px;
+  margin:0 auto 12px;
+}
+.panel{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:4px;
+  overflow:hidden;
+}
+.panelhead{
+  font-family:var(--ui-font);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:11px 13px;
+  border-bottom:1px solid var(--line-soft);
+  background:#ffffff;
+}
+.panelhead h2{margin:0;font-size:15px;letter-spacing:0}
+.panelbody{padding:13px}
+.rungrid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:12px;
+  align-items:center;
+}
+.bigrefresh{
+  height:48px;
+  width:100%;
+  font-size:18px;
+  font-weight:700;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+}
+.steps{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.step{
+  border:1px solid var(--line-soft);
+  background:#ffffff;
+  border-radius:4px;
+  padding:10px;
+  min-height:78px;
+}
+.step b{display:block;margin-bottom:4px}
+.step span{color:var(--muted);font-size:13px;line-height:1.45}
+.metrics{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:0;
+  border:1px solid var(--line);
+  border-bottom:0;
+  border-right:0;
+}
+.metric{
+  border:0;
+  border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  background:#ffffff;
+  border-radius:0;
+  padding:10px;
+  min-height:72px;
+  border-left:0;
+}
+.metric b{
+  display:block;
+  font-size:22px;
+  line-height:1.1;
+  margin-bottom:5px;
+}
+.metric span{color:var(--muted);font-size:12px}
+.metric.good b{color:var(--green)}
+.metric.warn b{color:#9a6700}
+.metric.bad b{color:var(--red)}
+.metric.info b{color:var(--blue)}
+.metric.wide{grid-column:span 2}
+.legend{
+  margin-top:10px;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.55;
+}
+.legend b{color:var(--text);font-weight:600}
+.legendline{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:2px 18px;
+}
+.tablewrap{overflow-x:hidden;overflow-y:visible}
+.data{
+  font-family:var(--table-font);
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  font-size:16px;
+  table-layout:fixed;
+  border-left:1px solid var(--line);
+  border-top:1px solid var(--line);
+}
+.data th,.data td{
+  border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  padding:5px 4px;
+  text-align:left;
+  vertical-align:top;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  transition:background-color .08s linear;
+}
+.data th{
+  position:sticky;
+  top:0;
+  z-index:1;
+  background:#fff6d6;
+  color:#111111;
+  font-size:15px;
+  font-weight:400;
+  padding-top:7px;
+  padding-bottom:7px;
+}
+.data th.sortable{
+  cursor:pointer;
+  user-select:none;
+}
+.data th.sortable:hover{
+  background:#ffefad;
+}
+.data th.sortable::after{
+  content:"";
+  color:#94a3b8;
+  font-size:12px;
+  display:inline-block;
+  width:0;
+  margin-left:3px;
+  text-align:center;
+}
+.data th.sortable[data-sort-dir="asc"]::after{
+  content:"▲";
+  color:#1d4ed8;
+  width:10px;
+}
+.data th.sortable[data-sort-dir="desc"]::after{
+  content:"▼";
+  color:#1d4ed8;
+  width:10px;
+}
+.data tbody tr:nth-child(even) td{background:#ffffff}
+.data td.name{
+  font-size:15px;
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+  line-height:1.25;
+  word-break:keep-all;
+  overflow-wrap:anywhere;
+}
+.data td.condition{white-space:normal;line-height:1.45;font-size:15px}
+.condition-line{white-space:nowrap}
+.condition-line.cond-wrap{white-space:normal;overflow-wrap:anywhere}
+.condition-line + .condition-line{margin-top:2px}
+.condition-line.missing{color:#6b7280}
+.attention-note{margin-top:3px;font-size:13px;line-height:1.35;color:#5b6472;white-space:normal}
+.attention-note strong{font-weight:400;color:inherit}
+.data td.num{text-align:right;font-variant-numeric:tabular-nums}
+#historyTable th,#historyTable td{
+  padding:5px 4px;
+  font-size:15px;
+}
+#dailyTrackingTable th,#dailyTrackingTable td{
+  padding:5px 4px;
+  font-size:15px;
+}
+.data tr.status-TP td:first-child{background:#e1eedb}
+.data tr.status-Conditional-True td:first-child{background:#fff2cc}
+.data tr.status-FP td:first-child,.data tr.status-FN td:first-child{background:#fbc9c6}
+.data tr.status-Pending td:first-child{background:#ffffff}
+.data tbody tr td.hit{background:#e1eedb !important}
+.data tbody tr td.hit-TP{background:#e1eedb !important}
+.data tbody tr td.hit-FP,.data tbody tr td.hit-FN{background:inherit !important}
+.condition-line.hit,
+.condition-line.hit-TP{
+  background:#e1eedb;
+  border-radius:4px;
+  padding:1px 3px;
+}
+.condition-line.hit-FP,
+.condition-line.hit-FN{background:inherit}
+.data tbody tr:hover > td{
+  background:#EFF6FF !important;
+}
+.data tbody tr:hover > td.hit,
+.data tbody tr:hover > td.hit-TP,
+.data tbody tr:hover > td.hit-FP,
+.data tbody tr:hover > td.hit-FN{
+  background:#e1eedb !important;
+}
+.data tbody tr:hover > td.hit-FP,
+.data tbody tr:hover > td.hit-FN{background:#EFF6FF !important}
+.data tbody tr:hover > td:first-child{
+  box-shadow:inset 3px 0 0 #60A5FA;
+}
+.data tbody tr:hover .tag{background:#EFF6FF}
+.empty{padding:22px;color:var(--muted);text-align:center}
+.tag{
+  display:inline-block;
+  border-radius:999px;
+  padding:2px 6px;
+  font-size:12px;
+  border:1px solid #cbd5df;
+  background:#fff;
+}
+.tag.ok{border-color:#9dc8aa;background:var(--green-bg);color:var(--green)}
+.tag.cond{border-color:#d7b96b;background:var(--amber-bg);color:var(--amber)}
+.tag.bad{border-color:#e1a1a1;background:var(--red-bg);color:var(--red)}
+.tag.pending{border-color:#bac5d0;background:#f4f6f8;color:#53616f}
+.date-link{
+  color:var(--blue);
+  text-decoration:none;
+  border-bottom:1px solid transparent;
+}
+.date-link:hover{
+  color:var(--blue-dark);
+  border-bottom-color:var(--blue-dark);
+}
+.countbar{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  color:var(--muted);
+  font-size:12px;
+  flex-wrap:wrap;
+}
+.historytools{
+  font-family:var(--ui-font);
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
+  margin-bottom:12px;
+}
+@media(max-width:980px){
+  .topbar,.grid{grid-template-columns:1fr}
+  .topbar{flex-direction:column;align-items:flex-start}
+  .topmeta{text-align:left;width:100%}
+  .topstatus{justify-content:flex-start;flex-wrap:wrap;white-space:normal}
+  .toolbar,.historytools{align-items:flex-start;flex-direction:column}
+  .panelhead{align-items:flex-start;flex-direction:column}
+  #backtestRunSelect{min-width:0 !important;width:100%}
+  .rungrid,.steps{grid-template-columns:1fr}
+  .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .metric.wide{grid-column:span 2}
+  .legendline{grid-template-columns:1fr}
+  .legendline span{display:block;margin-bottom:4px}
+}
+</style>
+<script>window.__DEFAULT_DATE__="2026-09-04";</script>
+<script>
+// --- static-site fetch shim: map /api/* GETs to pre-rendered JSON files ---
+(function () {
+  const realFetch = window.fetch.bind(window);
+  function qp(url, key) { try { return new URL(url, location.href).searchParams.get(key); } catch (e) { return null; } }
+  function jsonResp(obj) { return Promise.resolve(new Response(JSON.stringify(obj), {status:200, headers:{'Content-Type':'application/json'}})); }
+  window.fetch = function (input, init) {
+    const url = (typeof input === 'string') ? input : (input && input.url) || '';
+    if (url.indexOf('/api/') === -1) return realFetch(input, init);
+    const path = url.split('?')[0];
+    let target = null;
+    if (path.endsWith('/api/health')) target = 'api/health.json';
+    else if (path.endsWith('/api/workbench/dates')) target = 'api/workbench/dates.json';
+    else if (path.endsWith('/api/workbench/default-date')) target = 'api/workbench/default-date.json';
+    else if (path.endsWith('/api/workbench/history')) target = 'api/workbench/history.json';
+    else if (path.endsWith('/api/backtest/runs')) target = 'api/backtest/runs.json';
+    else if (path.endsWith('/api/backtest/latest')) target = 'api/backtest/latest.json';
+    else if (path.indexOf('/api/workbench/predictions') !== -1) {
+      const d = qp(url, 'date') || window.__DEFAULT_DATE__; target = 'api/workbench/predictions/' + d + '.json';
+    }
+    else if (path.indexOf('/api/workbench/validation') !== -1) {
+      const d = qp(url, 'date') || window.__DEFAULT_DATE__; target = 'api/workbench/validation/' + d + '.json';
+    }
+    else if (path.indexOf('/api/workbench/refresh') !== -1) {
+      // static site cannot fetch live; tell the UI it's a static snapshot
+      return jsonResp({mode:'blocked', reason:'static_site', message:'雲端靜態快照，無法即時 Refresh'});
+    }
+    if (!target) return jsonResp({});
+    return realFetch(target, init).then(r => r.ok ? r : jsonResp({}));
+  };
+})();
+</script>
+
+</head>
+<body>
+<main class="app">
+  <header class="topbar">
+    <div class="brand">
+      <h1>處置預測&結果</h1>
+      <!-- Codex 2026-05-08 13:10 +08:00: renamed condition column per user review. -->
+    </div>
+    <div class="topmeta">
+      <div class="topstatus">
+        <span id="modePill" class="modepill">判斷中</span>
+        <span id="clock">-</span>
+        <span id="server">server checking...</span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="toolbar">
+    <div class="lefttools">
+      <input id="recordDate" class="dateinput" type="date">
+      <button id="workbenchTab" class="active" type="button">每日詳細結果</button>
+      <button id="historyTab" class="secondary" type="button">📊 綜合整理 (歷史總表)</button>
+    </div>
+  </nav>
+
+  <section id="workbenchPage" class="page active">
+    <div class="grid">
+      <section class="panel">
+        <div class="panelhead">
+          <h2>每日作業</h2>
+          <span id="workflowHint" class="hint"></span>
+        </div>
+        <div class="panelbody rungrid">
+          <button id="refreshBtn" class="bigrefresh" type="button"><span class="spinner"></span><span class="btntext">Refresh</span></button>
+          <div class="steps">
+            <div class="step">
+              <b>13:30 前</b>
+              <span>先 fetch 最新已完成交易日與近期缺口，通過完整性 gate 後才建立今天的日盤預測快照。</span>
+            </div>
+            <div class="step">
+              <b>19:00 後</b>
+              <span>fetch 今日公告，對選取日期做 golden 比對，寫入每日驗證紀錄。</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panelhead">
+          <h2 id="statsTitle">盤後統計</h2>
+          <div class="countbar">
+            <span>價量表：只看盤中可用價/量判斷</span>
+            <span>公告前有先抓到幾檔：正式公告前是否已在候選內</span>
+          </div>
+        </div>
+        <div class="panelbody">
+          <div class="metrics">
+            <div class="metric info"><b id="mPred">-</b><span>日盤候選</span></div>
+            <div class="metric info"><b id="mActionable">-</b><span>價量可判斷</span></div>
+            <div class="metric info"><b id="mOther">-</b><span>無盤中門檻</span></div>
+            <div class="metric info"><b id="mActual">-</b><span>正式處置</span></div>
+            <div class="metric wide"><b id="mCaught">-</b><span>公告前有先抓到幾檔</span></div>
+            <div class="metric good"><b id="mTP">-</b><span>TP</span></div>
+            <div class="metric warn"><b id="mCT">-</b><span>Conditional True</span></div>
+            <div class="metric bad"><b id="mFP">-</b><span>FP</span></div>
+            <div class="metric bad"><b id="mFN">-</b><span>FN</span></div>
+            <div class="metric wide"><b id="mPR">-</b><span>Precision / Recall</span></div>
+          </div>
+          <div class="legend">
+            <div class="legendline">
+              <span><b>TP</b>：預測有、公告也有</span>
+              <span><b>FP</b>：條件達成但公告沒有</span>
+              <span><b>Conditional True</b>：收盤條件沒達成，所以未公告也算邏輯正確</span>
+              <span><b>FN</b>：公告有但日盤沒預測</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel">
+      <div class="panelhead">
+        <h2>盤中價量可判斷</h2>
+      </div>
+      <div class="tablewrap"><table class="data" id="combinedTable"></table></div>
+    </section>
+
+    <section class="panel" id="otherRiskPanel" hidden>
+      <div class="panelhead">
+        <h2>無盤中可操作門檻</h2>
+      </div>
+      <div class="tablewrap"><table class="data" id="otherRiskTable"></table></div>
+    </section>
+  </section>
+
+  <section id="historyPage" class="page">
+    <div class="historytools">
+      <div>
+        <h2 style="margin:0 0 4px;font-size:18px">綜合整理 (歷史總表)</h2>
+        <div class="hint">上方為 5/19 之後日常追蹤；下方為正式 Backtest。兩者分開保存、分開呈現。</div>
+      </div>
+    </div>
+    <section class="panel">
+      <div class="panelhead">
+        <div>
+          <h2>5/19 之後日常追蹤（非 Backtest）</h2>
+          <div id="dailyTrackingMeta" class="hint">讀取中...</div>
+        </div>
+      </div>
+      <div class="panelbody">
+        <div class="metrics compact">
+          <div class="metric info"><b id="dailyDays">-</b><span>日期數</span></div>
+          <div class="metric info"><b id="dailyPred">-</b><span>候選</span></div>
+          <div class="metric info"><b id="dailyActual">-</b><span>正式處置</span></div>
+          <div class="metric good"><b id="dailyTP">-</b><span>TP</span></div>
+          <div class="metric warn"><b id="dailyCT">-</b><span>Conditional True</span></div>
+          <div class="metric bad"><b id="dailyFP">-</b><span>FP</span></div>
+          <div class="metric bad"><b id="dailyFN">-</b><span>FN</span></div>
+          <div class="metric wide"><b id="dailyPR">-</b><span>Precision / Recall</span></div>
+        </div>
+      </div>
+      <div class="tablewrap"><table class="data" id="dailyTrackingTable"></table></div>
+    </section>
+    <section class="panel">
+      <div class="panelhead">
+        <div>
+          <h2>正式 Backtest</h2>
+          <div id="backtestMeta" class="hint">讀取中...</div>
+        </div>
+        <select id="backtestRunSelect" class="dateinput" style="min-width:360px"></select>
+      </div>
+      <div class="panelbody">
+        <div class="metrics compact">
+          <div class="metric info"><b id="btPred">-</b><span>候選</span></div>
+          <div class="metric info"><b id="btActual">-</b><span>正式處置</span></div>
+          <div class="metric good"><b id="btTP">-</b><span>TP</span></div>
+          <div class="metric warn"><b id="btCT">-</b><span>Conditional True</span></div>
+          <div class="metric bad"><b id="btFP">-</b><span>FP</span></div>
+          <div class="metric bad"><b id="btFN">-</b><span>FN</span></div>
+          <div class="metric wide"><b id="btPR">-</b><span>Precision / Recall</span></div>
+        </div>
+      </div>
+      <div class="tablewrap"><table class="data" id="historyTable"></table></div>
+    </section>
+  </section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const pct = v => {
+  // Codex 2026-05-13 01:06 +08:00: null means no denominator, not 0%.
+  if (v == null || v === "") return "-";
+  const n = Number(v);
+  return Number.isFinite(n) ? (n * 100).toFixed(1) + "%" : "-";
+};
+const dash = v => v == null ? "-" : v;
+const fmtVol = v => v == null ? "-" : Math.round(v).toLocaleString();
+const fmtTime = v => {
+  if (!v) return "-";
+  return String(v).replace("T", " ").split(".")[0];
+};
+const marketName = m => m === "twse" ? "上市" : m === "tpex" ? "上櫃" : (m || "");
+const fmtMeasure = v => {
+  if (!v) return "-";
+  const m = String(v).match(/^(\d+)\s*分$/);
+  return m ? `${m[1]} 分` : String(v);
+};
+const fmtOfficialMeasure = v => {
+  if (!v) return "-";
+  const s = String(v).toLowerCase();
+  if (s === "first") return "首次";
+  if (s === "second") return "再次";
+  return fmtMeasure(v);
+};
+const fmtPctSigned = v => {
+  if (v == null || Number.isNaN(Number(v))) return "";
+  const n = Number(v);
+  return ` (${n >= 0 ? "+" : ""}${n.toFixed(2)}%)`;
+};
+function formatCondition(row) {
+  if (!row) return "-";
+  const p = selectDisplayPath(row.paths || []);
+  if (!p) return row.condition_text || "-";
+  if (p.type === "price_only") {
+    const op = p.direction === "down" ? "<=" : ">=";
+    return `收盤 ${op} ${p.price}${fmtPctSigned(p.pct_from_current)}`;
+  }
+  if (p.type === "price_and_volume") {
+    const op = p.volume_operator || ">=";
+    const priceOp = p.direction === "down" ? "<=" : ">=";
+    return `收盤 ${priceOp} ${p.price}${fmtPctSigned(p.pct_from_current)} 且量 ${op} ${p.volume_zhang}張`;
+  }
+  if (p.type === "volume_only") {
+    const op = p.volume_operator || ">=";
+    // 第六款本質是「估值異常＋資金面集中」，不能只用成交量判定（量達標≠成立），避免誤導。
+    if (String(p.rule || "") === "rule_6") {
+      return `週轉率 >= 5%（量 ≥ ${p.volume_zhang}張）僅為門檻之一，另須本益比異常，且「同類股PBR 4倍」或「單一券商/投資人資金集中破億」其一，量達標不代表成立`;
+    }
+    return `成交量 ${op} ${p.volume_zhang} 張`;
+  }
+  return row.condition_text || "-";
+}
+function formatConditionPath(p) {
+  if (!p) return "-";
+  if (p.type === "price_only") {
+    const op = p.direction === "down" ? "<=" : ">=";
+    return `收盤 ${op} ${p.price}${fmtPctSigned(p.pct_from_current)}`;
+  }
+  if (p.type === "price_and_volume") {
+    const op = p.volume_operator || ">=";
+    const priceOp = p.direction === "down" ? "<=" : ">=";
+    return `收盤 ${priceOp} ${p.price}${fmtPctSigned(p.pct_from_current)} 且量 ${op} ${p.volume_zhang}張`;
+  }
+  if (p.type === "volume_only") {
+    const op = p.volume_operator || ">=";
+    // 第六款本質是「估值異常＋資金面集中」，不能只用成交量判定（量達標≠成立），避免誤導。
+    if (String(p.rule || "") === "rule_6") {
+      return `週轉率 >= 5%（量 ≥ ${p.volume_zhang}張）僅為門檻之一，另須本益比異常，且「同類股PBR 4倍」或「單一券商/投資人資金集中破億」其一，量達標不代表成立`;
+    }
+    return `成交量 ${op} ${p.volume_zhang} 張`;
+  }
+  return "-";
+}
+function pathAttentionRuleNumbers(path) {
+  const rule = String(path?.rule || "");
+  if (rule === "rule_1") return [1];
+  if (rule === "rule_3/4") return [3, 4];
+  if (rule.startsWith("rule_")) {
+    const n = Number(rule.slice(5));
+    if (Number.isInteger(n)) return [n];
+  }
+  return [];
+}
+function ruleNumbersText(numbers) {
+  const ordered = [...new Set((numbers || []).map(Number).filter(Number.isFinite))].sort((a, b) => a - b);
+  return ordered.map(n => `第${n}款`).join("、");
+}
+function ruleRangeText(numbers) {
+  const ordered = [...new Set((numbers || []).map(Number).filter(Number.isFinite))].sort((a, b) => a - b);
+  if (!ordered.length) return "";
+  const groups = [];
+  for (const n of ordered) {
+    const last = groups[groups.length - 1];
+    if (last && n === last.end + 1) {
+      last.end = n;
+    } else {
+      groups.push({ start: n, end: n });
+    }
+  }
+  return groups.map(g => g.start === g.end ? `第${g.start}款` : `第${g.start}至${g.end}款`).join("、");
+}
+function conditionRuleNumbers(path, validation=null) {
+  const pathRules = pathAttentionRuleNumbers(path);
+  if (!pathRules.length) return [];
+  const required = requiredRuleNumbers(validation);
+  const requiredSet = new Set(required);
+  const requiredMatched = pathRules.filter(n => requiredSet.has(n));
+  return requiredMatched.length ? requiredMatched : pathRules;
+}
+function formatConditionPathWithRule(p, validation=null) {
+  const label = ruleNumbersText(conditionRuleNumbers(p, validation));
+  const condition = formatConditionPath(p);
+  const suffix = conditionVerificationSuffix(p, validation);
+  return label ? `${label}：${condition}${suffix}` : `${condition}${suffix}`;
+}
+function actualAttentionRuleSet(validation) {
+  if (!validation || !Array.isArray(validation.actual_attention_rules)) return null;
+  return new Set(validation.actual_attention_rules.map(Number).filter(Number.isFinite));
+}
+function pathMatchesActualAttention(path, validation) {
+  const actual = actualAttentionRuleSet(validation);
+  if (!actual) return true;
+  const pathRules = pathAttentionRuleNumbers(path);
+  if (!pathRules.length) return true;
+  return pathRules.some(n => actual.has(n));
+}
+function conditionVerificationSuffix(path, validation) {
+  const actual = actualAttentionRuleSet(validation);
+  if (!actual) return "";
+  const rules = conditionRuleNumbers(path, validation);
+  if (!rules.length || rules.some(n => actual.has(n))) return "";
+  return `（官方未公告${ruleNumbersText(rules)}）`;
+}
+function samePathFamily(a, b) {
+  return a.path.type === b.path.type
+    && (a.path.direction || "") === (b.path.direction || "")
+    && ruleNumbersText(a.rules) === ruleNumbersText(b.rules);
+}
+function pathDominates(a, b) {
+  if (!samePathFamily(a, b)) return false;
+  const pa = Number(a.path.price);
+  const pb = Number(b.path.price);
+  const va = Number(a.path.volume_zhang);
+  const vb = Number(b.path.volume_zhang);
+  if (a.path.type === "price_only") {
+    if (!Number.isFinite(pa) || !Number.isFinite(pb)) return false;
+    return a.path.direction === "down" ? pa >= pb : pa <= pb;
+  }
+  if (a.path.type === "volume_only") {
+    if (!Number.isFinite(va) || !Number.isFinite(vb)) return false;
+    return va <= vb;
+  }
+  if (a.path.type === "price_and_volume") {
+    if (!Number.isFinite(pa) || !Number.isFinite(pb) || !Number.isFinite(va) || !Number.isFinite(vb)) return false;
+    const priceDominates = a.path.direction === "down" ? pa >= pb : pa <= pb;
+    return priceDominates && va <= vb;
+  }
+  return false;
+}
+function displayConditionPathItems(pred, validation=null) {
+  const items = [];
+  for (const path of visibleConditionPaths(pred, validation)) {
+    const rules = conditionRuleNumbers(path, validation);
+    if (!rules.length) continue;
+    const item = { path, rules };
+    let skip = false;
+    for (let i = items.length - 1; i >= 0; i--) {
+      if (!samePathFamily(item, items[i])) continue;
+      if (pathDominates(items[i], item)) {
+        skip = true;
+        break;
+      }
+      if (pathDominates(item, items[i])) {
+        items.splice(i, 1);
+      }
+    }
+    if (!skip) items.push(item);
+  }
+  return items.sort((a, b) =>
+    Math.min(...a.rules) - Math.min(...b.rules)
+    || String(a.path.type).localeCompare(String(b.path.type))
+    || String(a.path.direction || "").localeCompare(String(b.path.direction || ""))
+  );
+}
+function visibleConditionPaths(row, validation=null) {
+  if (!row) return [];
+  const paths = row.paths || [];
+  const visible = paths.filter(x => {
+    // Codex 2026-05-13 23:40 +08:00: the main table is for
+    // user-actionable intraday price/volume conditions only.
+    if (!["price_only", "price_and_volume", "volume_only"].includes(x.type)) return false;
+    const pct = x.pct_from_current;
+    return x.type === "volume_only" || pct == null || Math.abs(Number(pct)) <= 10;
+  });
+  const required = requiredRuleNumbers(validation, row);
+  const requiredSet = new Set(required);
+  const filtered = requiredSet.size
+    ? visible.filter(x => pathAttentionRuleNumbers(x).some(n => requiredSet.has(n)))
+    : visible;
+  filtered.sort((a, b) => {
+    const score = x => x.type === "volume_only" ? 999 : Math.abs(Number(x.pct_from_current || 0));
+    const typeScore = x => x.type === "price_and_volume" ? 1 : 0;
+    return score(a) - score(b) || typeScore(a) - typeScore(b);
+  });
+  return filtered;
+}
+function derivedRequiredRuleNumbers(pred) {
+  const required = new Set();
+  for (const path of pred?.paths || []) {
+    for (const condition of path?._required_conditions || []) {
+      if (condition === "consecutive_rule1") {
+        required.add(1);
+      } else if (["consecutive_disposition", "window_10", "window_30"].includes(condition)) {
+        for (let n = 1; n <= 8; n++) required.add(n);
+      }
+    }
+  }
+  return [...required].sort((a, b) => a - b);
+}
+function hasRequiredAttentionFilter(validation, pred=null) {
+  return requiredRuleNumbers(validation, pred).length > 0;
+}
+function conditionPathHit(p, r) {
+  if (!p || !r) return false;
+  if (!["price_only", "price_and_volume", "volume_only"].includes(p.type)) return false;
+  const compare = (actual, op, threshold) => {
+    if (!Number.isFinite(actual) || !Number.isFinite(threshold)) return false;
+    if (op === "<") return actual < threshold;
+    if (op === "<=") return actual <= threshold;
+    return op === ">" ? actual > threshold : actual >= threshold;
+  };
+  const actualClose = Number(r.actual_close);
+  const actualVolume = Number(r.actual_volume_zhang);
+  let ok = true;
+  if (p.type === "price_only" || p.type === "price_and_volume") {
+    ok = ok && compare(actualClose, p.direction === "down" ? "<=" : ">=", Number(p.price));
+  }
+  if (p.type === "price_and_volume" || p.type === "volume_only") {
+    ok = ok && compare(actualVolume, p.volume_operator || ">=", Number(p.volume_zhang));
+  }
+  return ok && pathMatchesActualAttention(p, r);
+}
+function requiredRuleNumbers(validation, pred=null) {
+  const fromValidation = [...new Set((validation?.required_attention_rules || []).map(Number).filter(Number.isFinite))].sort((a, b) => a - b);
+  return fromValidation.length ? fromValidation : derivedRequiredRuleNumbers(pred);
+}
+function isExtremePrediction(pred) {
+  return Boolean(pred && (pred.extreme || pred.is_extreme || String(pred.condition_text || "").includes("不論交易")));
+}
+function extremeConditionText(pred, validation=null) {
+  return "不論交易";
+}
+function renderRequiredConditionLines(pred, r, status) {
+  const required = requiredRuleNumbers(r, pred);
+  if (!required.length) return "";
+  const covered = new Set();
+  const seen = new Set();
+  const lines = [];
+  for (const { path: p, rules } of displayConditionPathItems(pred, r)) {
+    rules.forEach(n => covered.add(n));
+    const text = `${ruleNumbersText(rules)}：${formatConditionPath(p)}${conditionVerificationSuffix(p, r)}`;
+    if (seen.has(text)) continue;
+    seen.add(text);
+    const cls = conditionPathHit(p, r) ? hitTone("hit", status) : "";
+    const wrapCls = String(p.rule || "") === "rule_6" ? " cond-wrap" : "";
+    lines.push(`<div class="condition-line ${cls}${wrapCls}">${text}</div>`);
+  }
+  const missing = required.filter(rule => !covered.has(rule));
+  if (missing.length) {
+    lines.push(`<div class="condition-line missing">${ruleRangeText(missing)}：本日無可顯示價量門檻</div>`);
+  }
+  return lines.join("");
+}
+function renderConditionCell(pred, r, status) {
+  if (!pred) return "-";
+  const attentionNotes = renderAttentionNotes(r, pred);
+  if (isExtremePrediction(pred)) {
+    return `<span class="${hitTone("hit", status)}">${extremeConditionText(pred, r)}</span>${attentionNotes}`;
+  }
+  const requiredLines = renderRequiredConditionLines(pred, r, status);
+  if (requiredLines) return `${requiredLines}${attentionNotes}`;
+  if (!hasRequiredAttentionFilter(r, pred) && pred.condition_text && pred.condition_text !== "-") {
+    return `<div class="condition-line">${pred.condition_text}</div>${attentionNotes}`;
+  }
+  const paths = visibleConditionPaths(pred, r);
+  if (!paths.length) return (pred.condition_text || "-") + attentionNotes;
+  return paths.map(p => {
+    const hit = conditionPathHit(p, r);
+    const cls = hit ? hitTone("hit", status) : "";
+    const wrapCls = String(p.rule || "") === "rule_6" ? " cond-wrap" : "";
+    return `<div class="condition-line ${cls}${wrapCls}">${formatConditionPathWithRule(p, r)}</div>`;
+  }).join("") + attentionNotes;
+}
+function renderAttentionNotes(r, pred=null) {
+  if (isExtremePrediction(pred)) return "";
+  const lines = [];
+  const requiredNote = requiredAttentionNoteFromPrediction(pred, r);
+  if (requiredNote) {
+    lines.push(`<div class="attention-note"><strong>必要條件：</strong>${requiredNote}</div>`);
+  }
+  const required = requiredRuleNumbers(r, pred);
+  const actual = actualAttentionRuleSet(r);
+  if (required.length && actual && !required.some(n => actual.has(n))) {
+    const actualText = actual.size ? ruleNumbersText([...actual]) : "無";
+    lines.push(`<div class="attention-note">本日官方注意款別：${actualText}，未符合此進度條件</div>`);
+  }
+  return lines.join("");
+}
+function attentionRequirementText(numbers) {
+  const ordered = [...new Set((numbers || []).map(Number).filter(Number.isFinite))].sort((a, b) => a - b);
+  if (!ordered.length) return "";
+  if (ordered.length === 8 && ordered.every((n, i) => n === i + 1)) return "第1至8款任一款";
+  if (ordered.length === 1) return `第${ordered[0]}款`;
+  return `${ruleNumbersText(ordered)}任一款`;
+}
+function requiredAttentionNoteFromPrediction(pred, validation=null) {
+  const required = requiredRuleNumbers(validation, pred);
+  const text = attentionRequirementText(required);
+  return text ? `本日需有官方${text}注意成立，才可能隔天進處置` : "";
+}
+function selectDisplayPath(paths, validation=null) {
+  const visible = (paths || []).filter(x => {
+    if (!["price_only", "price_and_volume", "volume_only"].includes(x.type)) return false;
+    const pct = x.pct_from_current;
+    return x.type === "volume_only" || pct == null || Math.abs(Number(pct)) <= 10;
+  });
+  const required = requiredRuleNumbers(validation);
+  const requiredSet = new Set(required);
+  const filtered = requiredSet.size
+    ? visible.filter(x => pathAttentionRuleNumbers(x).some(n => requiredSet.has(n)))
+    : visible;
+  filtered.sort((a, b) => {
+    const score = x => x.type === "volume_only" ? 999 : Math.abs(Number(x.pct_from_current || 0));
+    const typeScore = x => x.type === "price_and_volume" ? 1 : 0;
+    return score(a) - score(b) || typeScore(a) - typeScore(b);
+  });
+  return filtered[0] || null;
+}
+function conditionHitClasses(pred, r) {
+  if (!pred || !r) return { condition:"", close:"", volume:"" };
+  const displayedCondition = formatCondition(pred);
+  const paths = pred.paths || [];
+  if (isExtremePrediction(pred)) {
+    return { condition:"hit", close:"", volume:"" };
+  }
+  const compare = (actual, op, threshold) => {
+    if (!Number.isFinite(actual) || !Number.isFinite(threshold)) return false;
+    if (op === "<") return actual < threshold;
+    if (op === "<=") return actual <= threshold;
+    return op === ">" ? actual > threshold : actual >= threshold;
+  };
+  const actualClose = Number(r.actual_close);
+  const actualVolume = Number(r.actual_volume_zhang);
+  const prevClose = Number(pred.close);
+  const textHitClasses = () => {
+    const text = `${displayedCondition} ${pred.condition_text || ""}`;
+    let closeHit = false;
+    let volumeHit = false;
+    const priceMatch = text.match(/收盤\s*(>=|>|<=|<)\s*([0-9]+(?:\.[0-9]+)?)/);
+    if (priceMatch) {
+      closeHit = compare(actualClose, priceMatch[1], Number(priceMatch[2]));
+    }
+    const pctMatch = text.match(/收盤漲跌幅\s*(>=|>)\s*([+-]?\d+(?:\.\d+)?)%/);
+    if (!closeHit && pctMatch && Number.isFinite(prevClose) && prevClose !== 0) {
+      const actualPct = (actualClose - prevClose) / prevClose * 100;
+      closeHit = compare(actualPct, pctMatch[1], Number(pctMatch[2]));
+    }
+    const predictedPct = Number(r.predicted_pct);
+    if (!closeHit && Number.isFinite(predictedPct) && Number.isFinite(prevClose) && prevClose !== 0) {
+      const actualPct = (actualClose - prevClose) / prevClose * 100;
+      closeHit = actualPct >= predictedPct;
+    }
+    const volumeMatch = text.match(/(?:成交量|量)\s*(>=|>)\s*([0-9,]+(?:\.[0-9]+)?)\s*張/);
+    if (volumeMatch) {
+      volumeHit = compare(actualVolume, volumeMatch[1], Number(volumeMatch[2].replace(/,/g, "")));
+    }
+    return { condition:"", close: closeHit ? "hit" : "", volume: volumeHit ? "hit" : "" };
+  };
+  const visiblePaths = visibleConditionPaths(pred, r);
+  if (visiblePaths.length) {
+    let closeHit = false;
+    let volumeHit = false;
+    for (const p of visiblePaths) {
+      if (!pathMatchesActualAttention(p, r)) continue;
+      if ((p.type === "price_only" || p.type === "price_and_volume") && Number.isFinite(actualClose)) {
+        closeHit = closeHit || compare(actualClose, p.direction === "down" ? "<=" : ">=", Number(p.price));
+      }
+      if ((p.type === "price_and_volume" || p.type === "volume_only") && Number.isFinite(actualVolume)) {
+        volumeHit = volumeHit || compare(actualVolume, p.volume_operator || ">=", Number(p.volume_zhang));
+      }
+    }
+    return { condition:"", close: closeHit ? "hit" : "", volume: volumeHit ? "hit" : "" };
+  }
+  if (!paths.length) {
+    return textHitClasses();
+  }
+  const p = selectDisplayPath(paths, r);
+  if (!p) {
+    return textHitClasses();
+  }
+  let closeHit = false;
+  let volumeHit = false;
+  if ((p.type === "price_only" || p.type === "price_and_volume") && Number.isFinite(actualClose)) {
+    closeHit = compare(actualClose, p.direction === "down" ? "<=" : ">=", Number(p.price));
+  }
+  if ((p.type === "price_and_volume" || p.type === "volume_only") && Number.isFinite(actualVolume)) {
+    const op = p.volume_operator || ">=";
+    const threshold = Number(p.volume_zhang);
+    volumeHit = compare(actualVolume, op, threshold);
+  }
+  if (!pathMatchesActualAttention(p, r)) {
+    closeHit = false;
+    volumeHit = false;
+  }
+  return { condition:"", close: closeHit ? "hit" : "", volume: volumeHit ? "hit" : "" };
+}
+function formatReasonText(reason, status) {
+  if (reason && reason.startsWith("正式處置公告尚未取得")) return "本日公告尚未取得";
+  if (reason === "公告尚未取得") return "本日公告尚未取得";
+  if (reason) return reason;
+  if (status === "FN") return "公告有列入，日盤未預測";
+  return "";
+}
+let currentPredRows = [];
+let currentValidationDetails = [];
+let currentFnRows = [];
+let currentValidationSummary = null;
+let currentBaseDate = null;
+let currentPredictionCount = null;
+let knownDates = [];
+let defaultWorkbenchDate = null;
+let activePage = "workbench";
+let combinedSort = { key: null, dir: null };
+const BACKTEST_HISTORY_LIMIT = 3000;
+const DAILY_TRACKING_START = "2026-05-19";
+let historySort = { key: null, dir: null };
+let selectedBacktestRunId = "";
+let workflowHintMessage = "";
+
+function setBusy(on, refresh=false) {
+  $("refreshBtn").disabled = on;
+  $("recordDate").disabled = on;
+  $("refreshBtn").classList.toggle("refreshing", on && refresh);
+}
+function setButtonText(text) { $("refreshBtn").querySelector(".btntext").textContent = text; }
+function resetButtonTextSoon() { setTimeout(() => setButtonText("Refresh"), 1800); }
+function setWorkflowHintMessage(text) {
+  workflowHintMessage = text || "";
+  $("workflowHint").textContent = workflowHintMessage;
+}
+async function api(url, options={}) {
+  const res = await fetch(url, {
+    cache: "no-store",
+    ...options,
+    headers: {
+      "Cache-Control": "no-cache",
+      ...(options.headers || {}),
+    },
+  });
+  const data = await res.json();
+  if (!res.ok || data.error) throw new Error(data.error || res.statusText);
+  return data;
+}
+function describeDataGate(gate) {
+  const missing = Array.isArray(gate?.missing) ? gate.missing : [];
+  if (!missing.length) return "近期市場資料未完整，已停止寫入新的日盤預測快照。";
+  const items = missing.slice(0, 8).map(x => `${x.date} ${x.source} ${dash(x.rows)}/${dash(x.min_rows)}`);
+  const more = missing.length > items.length ? `，另 ${missing.length - items.length} 項` : "";
+  return `近期市場資料未完整：${items.join("、")}${more}。未寫入新的日盤預測快照。`;
+}
+function tickClock() {
+  const now = new Date();
+  $("clock").textContent = now.toLocaleString("zh-TW", { hour12:false });
+  updateWorkflowMode(now);
+}
+setInterval(tickClock, 1000);
+tickClock();
+
+function updateWorkflowMode(now=new Date()) {
+  const minutes = now.getHours() * 60 + now.getMinutes();
+  let label = "等待盤後";
+  if (minutes < 13 * 60 + 30) {
+    label = "日盤預測";
+  } else if (minutes >= 19 * 60) {
+    label = "盤後比對";
+  }
+  $("modePill").textContent = label;
+  $("workflowHint").textContent = workflowHintMessage;
+}
+
+function showPage(page) {
+  activePage = page;
+  $("workbenchPage").classList.toggle("active", page === "workbench");
+  $("historyPage").classList.toggle("active", page === "history");
+  $("workbenchTab").className = page === "workbench" ? "active" : "secondary";
+  $("historyTab").className = page === "history" ? "active" : "secondary";
+  if (page === "history") {
+    loadHistory(false);
+  }
+}
+
+function renderPredictions(rows) {
+  currentPredRows = rows || [];
+  currentPredictionCount = currentPredRows.length;
+  currentBaseDate = currentPredRows[0]?.base_date || null;
+  renderCombined();
+}
+
+function formatSlashDate(dateStr) {
+  if (!dateStr) return "";
+  const parts = dateStr.split("-");
+  if (parts.length !== 3) return dateStr;
+  return `${parts[0]}/${parts[1]}/${parts[2]}`;
+}
+
+function updateStatsTitle(dateStr) {
+  $("statsTitle").textContent = dateStr ? `${formatSlashDate(dateStr)} 盤後統計` : "盤後統計";
+}
+
+function renderSummary(s) {
+  $("mPred").textContent = s?.predicted ?? "-";
+  $("mActual").textContent = s?.actual ?? "-";
+  $("mCaught").textContent = s && s.actual != null && s.fn != null ? `${Math.max(0, s.actual - s.fn)} / ${s.actual}` : "-";
+  $("mTP").textContent = s?.tp ?? "-";
+  $("mCT").textContent = s?.conditional_true ?? "-";
+  $("mFP").textContent = s?.fp ?? "-";
+  $("mFN").textContent = s?.fn ?? "-";
+  $("mPR").textContent = s ? `${pct(s.precision_conditional_correct)} / ${pct(s.recall)}` : "-";
+}
+
+function renderDaySummary(count) {
+  // Codex 2026-05-11 10:28 +08:00: day-session refresh has no golden summary yet,
+  // but the candidate count should still reflect the refreshed prediction rows.
+  $("mPred").textContent = count ?? "-";
+  $("mActionable").textContent = "-";
+  $("mOther").textContent = "-";
+  $("mActual").textContent = "-";
+  $("mCaught").textContent = "-";
+  $("mTP").textContent = "-";
+  $("mCT").textContent = "-";
+  $("mFP").textContent = "-";
+  $("mFN").textContent = "-";
+  $("mPR").textContent = "-";
+}
+
+
+function statusTag(status) {
+  const cls = status === "TP" ? "ok" :
+    status === "Conditional True" ? "cond" :
+    status === "FP" || status === "FN" ? "bad" : "pending";
+  return `<span class="tag ${cls}">${status}</span>`;
+}
+
+function hitTone(cls, status) {
+  if (!cls) return "";
+  // Codex 2026-05-14 00:04 +08:00: only TP gets green hit highlights.
+  // Conditional True stays as a result status, not a yellow actual price/volume hit.
+  return status === "TP" ? "hit-TP" : "";
+}
+
+function renderValidation(details, fnRows) {
+  currentValidationDetails = details || [];
+  currentFnRows = fnRows || [];
+  renderCombined();
+}
+
+function setValidationSummary(summary) {
+  currentValidationSummary = summary || null;
+}
+
+function combinedStatus(item) {
+  return item.val?.status || item.fn?.status || (item.pred ? "Pending" : "FN");
+}
+
+function combinedConditionText(pred, r) {
+  if (!pred) return "";
+  if (isExtremePrediction(pred)) return extremeConditionText(pred, r);
+  const required = requiredRuleNumbers(r, pred);
+  if (required.length) {
+    const covered = new Set();
+    const parts = [];
+    const seen = new Set();
+    for (const { path: p, rules } of displayConditionPathItems(pred, r)) {
+      rules.forEach(n => covered.add(n));
+      const text = `${ruleNumbersText(rules)}：${formatConditionPath(p)}${conditionVerificationSuffix(p, r)}`;
+      if (!seen.has(text)) {
+        seen.add(text);
+        parts.push(text);
+      }
+    }
+    const missing = required.filter(rule => !covered.has(rule));
+    if (missing.length) parts.push(`${ruleRangeText(missing)}：本日無可顯示價量門檻`);
+    return parts.join(" / ");
+  }
+  if (!hasRequiredAttentionFilter(r, pred) && pred.condition_text && pred.condition_text !== "-") return pred.condition_text;
+  return visibleConditionPaths(pred, r).map(p => formatConditionPathWithRule(p, r)).join(" / ") || formatCondition(pred);
+}
+
+function isActionablePrediction(pred) {
+  if (!pred) return false;
+  if (isExtremePrediction(pred)) return true;
+  return visibleConditionPaths(pred).length > 0;
+}
+
+function measureNumber(value) {
+  const m = String(value || "").match(/(\d+)/);
+  return m ? Number(m[1]) : null;
+}
+
+function combinedSortValue(item, key) {
+  const pred = item.pred;
+  const r = item.val || item.fn || {};
+  if (key === "status") return combinedStatus(item);
+  if (key === "stock_id") return (pred && pred.stock_id) || r.stock_id || "";
+  if (key === "name") return (pred && pred.name) || r.name || "";
+  if (key === "market") return marketName((pred && pred.market) || r.market);
+  if (key === "prev_close") return pred?.close ?? null;
+  if (key === "measure") return measureNumber(pred?.measure || pred?.predicted_measure);
+  if (key === "condition") return combinedConditionText(pred, r);
+  if (key === "actual_close") return r.actual_close ?? null;
+  if (key === "actual_volume") return r.actual_volume_zhang ?? null;
+  if (key === "actual_measure") return measureNumber(r.actual_measure);
+  if (key === "reason") return r.reason || "";
+  return "";
+}
+
+function compareValues(a, b) {
+  const aEmpty = a == null || a === "";
+  const bEmpty = b == null || b === "";
+  if (aEmpty && bEmpty) return 0;
+  if (aEmpty) return 1;
+  if (bEmpty) return -1;
+  if (typeof a === "number" && typeof b === "number") return a - b;
+  return String(a).localeCompare(String(b), "zh-Hant", { numeric:true });
+}
+
+function sortCombinedRows(rows) {
+  if (!combinedSort.key || !combinedSort.dir) return rows;
+  const factor = combinedSort.dir === "asc" ? 1 : -1;
+  return [...rows].sort((a, b) => {
+    const diff = compareValues(
+      combinedSortValue(a.item, combinedSort.key),
+      combinedSortValue(b.item, combinedSort.key)
+    );
+    return diff === 0 ? a.index - b.index : diff * factor;
+  });
+}
+
+function sortableHeader(key, label, cls="") {
+  const dir = combinedSort.key === key ? (combinedSort.dir || "") : "";
+  return `<th class="sortable ${cls}" data-sort-key="${key}" data-sort-dir="${dir}">${label}</th>`;
+}
+
+function cycleCombinedSort(key) {
+  if (combinedSort.key !== key) {
+    combinedSort = { key, dir:"asc" };
+  } else if (combinedSort.dir === "asc") {
+    combinedSort = { key, dir:"desc" };
+  } else if (combinedSort.dir === "desc") {
+    combinedSort = { key:null, dir:null };
+  } else {
+    combinedSort = { key, dir:"asc" };
+  }
+  renderCombined();
+}
+
+function renderCombined() {
+  const t = $("combinedTable");
+  const otherTable = $("otherRiskTable");
+  const otherPanel = $("otherRiskPanel");
+  const vMap = new Map(currentValidationDetails.map(r => [r.stock_id, r]));
+  const allPredRows = currentPredRows.map(p => ({ pred: p, val: vMap.get(p.stock_id), fn: null }));
+  let rows = allPredRows.filter(x => !x.pred || isActionablePrediction(x.pred));
+  let otherRows = allPredRows.filter(x => x.pred && !isActionablePrediction(x.pred));
+  const predicted = new Set(currentPredRows.map(p => p.stock_id));
+  for (const fn of currentFnRows) {
+    if (!predicted.has(fn.stock_id)) rows.push({ pred: null, val: null, fn });
+  }
+  $("mActionable").textContent = allPredRows.filter(x => x.pred && isActionablePrediction(x.pred)).length;
+  $("mOther").textContent = otherRows.length;
+  if (currentValidationSummary && currentValidationSummary.actual != null && currentValidationSummary.fn != null) {
+    $("mCaught").textContent = `${Math.max(0, currentValidationSummary.actual - currentValidationSummary.fn)} / ${currentValidationSummary.actual}`;
+  }
+  const displayRows = sortCombinedRows(rows.map((item, index) => ({ item, index }))).map(x => x.item);
+  const otherDisplayRows = sortCombinedRows(otherRows.map((item, index) => ({ item, index }))).map(x => x.item);
+  updateStatsTitle($("recordDate").value);
+  if (displayRows.length === 0) {
+    if (currentValidationSummary) {
+      const predicted = currentValidationSummary.predicted ?? 0;
+      const actual = currentValidationSummary.actual ?? 0;
+      t.innerHTML = `<tr><td class="empty">此日有留存紀錄：預測 ${predicted} 檔，正式公告 ${actual} 檔。</td></tr>`;
+    } else {
+      t.innerHTML = '<tr><td class="empty">沒有這一天的預測或比對紀錄。</td></tr>';
+    }
+  } else {
+    updateStatsTitle($("recordDate").value);
+    t.innerHTML = `<colgroup>
+    <col style="width:11%">
+    <col style="width:5.5%">
+    <col style="width:8.5%">
+    <col style="width:5%">
+    <col style="width:7.5%">
+    <col style="width:7%">
+    <col style="width:29.5%">
+    <col style="width:8.5%">
+    <col style="width:8.5%">
+    <col style="width:9%">
+  </colgroup><thead><tr>
+    ${sortableHeader("status", "結果")}
+    ${sortableHeader("stock_id", "代號")}
+    ${sortableHeader("name", "名稱")}
+    ${sortableHeader("market", "市場")}
+    ${sortableHeader("prev_close", "昨收盤價", "num")}
+    ${sortableHeader("measure", "預測處置", "num")}
+    ${sortableHeader("condition", "觸發處置條件")}
+    ${sortableHeader("actual_close", "實際收盤價", "num")}
+    ${sortableHeader("actual_volume", "實際量(張)", "num")}
+    ${sortableHeader("actual_measure", "正式處置")}
+  </tr></thead><tbody>${displayRows.map(({pred, val, fn}) => {
+    const r = val || fn || {};
+    const status = r.status || (pred ? "Pending" : "FN");
+    const rowClass = `status-${status.replaceAll(" ", "-")}`;
+    const hits = conditionHitClasses(pred, r);
+    const conditionHit = hitTone(hits.condition, status);
+    const closeHit = hitTone(hits.close, status);
+    const volumeHit = hitTone(hits.volume, status);
+    return `<tr class="${rowClass}">
+      <td>${statusTag(status)}</td>
+      <td>${(pred && pred.stock_id) || r.stock_id}</td>
+      <td class="name">${(pred && pred.name) || r.name || ""}</td>
+      <td>${marketName((pred && pred.market) || r.market)}</td>
+      <td class="num">${pred ? (pred.close ?? "-") : "-"}</td>
+      <td class="num">${pred ? fmtMeasure(pred.measure || pred.predicted_measure) : "-"}</td>
+      <td class="condition ${conditionHit}">${renderConditionCell(pred, r, status)}</td>
+      <td class="num ${closeHit}">${r.actual_close ?? "-"}</td>
+      <td class="num ${volumeHit}">${fmtVol(r.actual_volume_zhang)}</td>
+      <td>${fmtOfficialMeasure(r.actual_measure)}</td>
+    </tr>`;
+  }).join("")}</tbody>`;
+  t.querySelectorAll("th.sortable").forEach(th => {
+    th.onclick = () => cycleCombinedSort(th.dataset.sortKey);
+  });
+  }
+  otherPanel.hidden = otherDisplayRows.length === 0;
+  if (!otherDisplayRows.length) {
+    otherTable.innerHTML = '<tr><td class="empty">沒有無盤中可操作門檻的候選。</td></tr>';
+  } else {
+    otherTable.innerHTML = `<colgroup>
+      <col style="width:11%">
+      <col style="width:5.5%">
+      <col style="width:8.5%">
+      <col style="width:5%">
+      <col style="width:7.5%">
+      <col style="width:7%">
+      <col style="width:29.5%">
+      <col style="width:8.5%">
+      <col style="width:8.5%">
+      <col style="width:9%">
+    </colgroup><thead><tr>
+      ${sortableHeader("status", "結果")}
+      ${sortableHeader("stock_id", "代號")}
+      ${sortableHeader("name", "名稱")}
+      ${sortableHeader("market", "市場")}
+      ${sortableHeader("prev_close", "昨收盤價", "num")}
+      ${sortableHeader("measure", "預測處置", "num")}
+      <th>說明</th>
+      ${sortableHeader("actual_close", "實際收盤價", "num")}
+      ${sortableHeader("actual_volume", "實際量(張)", "num")}
+      ${sortableHeader("actual_measure", "正式處置")}
+    </tr></thead><tbody>${otherDisplayRows.map(({pred, val}) => {
+      const r = val || {};
+      const status = r.status || "Pending";
+      const rowClass = `status-${status.replaceAll(" ", "-")}`;
+      return `<tr class="${rowClass}">
+        <td>${statusTag(status)}</td>
+        <td>${pred.stock_id}</td>
+        <td class="name">${pred.name || ""}</td>
+        <td>${marketName(pred.market)}</td>
+        <td class="num">${pred.close ?? "-"}</td>
+        <td class="num">${fmtMeasure(pred.measure || pred.predicted_measure)}</td>
+        <td class="condition">沒有可在盤中追蹤的價格 / 成交量門檻</td>
+        <td class="num">${r.actual_close ?? "-"}</td>
+        <td class="num">${fmtVol(r.actual_volume_zhang)}</td>
+        <td>${fmtOfficialMeasure(r.actual_measure)}</td>
+      </tr>`;
+    }).join("")}</tbody>`;
+    otherTable.querySelectorAll("th.sortable").forEach(th => {
+      th.onclick = () => cycleCombinedSort(th.dataset.sortKey);
+    });
+  }
+}
+
+function renderHistory(rows) {
+  const t = $("historyTable");
+  if (!rows || rows.length === 0) {
+    t.innerHTML = '<tr><td class="empty">沒有每日留存紀錄。</td></tr>';
+    return;
+  }
+  t.innerHTML = `<colgroup>
+    <col style="width:10%">
+    <col style="width:10%">
+    <col style="width:7%">
+    <col style="width:7%">
+    <col style="width:6%">
+    <col style="width:12%">
+    <col style="width:5%">
+    <col style="width:5%">
+    <col style="width:7%">
+    <col style="width:8%">
+    <col style="width:7%">
+    <col style="width:16%">
+  </colgroup><thead><tr>
+    <th>日期</th><th>基準日</th><th class="num">候選</th><th class="num">正式</th><th class="num">TP</th><th class="num">Conditional True</th>
+    <th class="num">FP</th><th class="num">FN</th><th class="num">Pending</th><th class="num">Precision</th><th class="num">Recall</th><th>寫入時間</th>
+  </tr></thead><tbody>${rows.map(r => `<tr>
+    <td><a class="date-link" href="/?date=${encodeURIComponent(r.validation_date)}">${r.validation_date}</a></td><td>${r.base_date || ""}</td><td class="num">${dash(r.predicted_count)}</td><td class="num">${dash(r.actual_count)}</td>
+    <td class="num">${dash(r.tp)}</td><td class="num">${dash(r.conditional_true)}</td><td class="num">${dash(r.fp)}</td><td class="num">${dash(r.fn)}</td><td class="num">${dash(r.pending)}</td>
+    <td class="num">${pct(r.precision_conditional_correct)}</td><td class="num">${pct(r.recall)}</td><td>${fmtTime(r.created_at)}</td>
+  </tr>`).join("")}</tbody>`;
+}
+
+function isNumericValue(v) {
+  return v !== "-" && v != null && v !== "" && Number.isFinite(Number(v));
+}
+
+function sumNumeric(rows, key) {
+  return rows.reduce((sum, row) => sum + (isNumericValue(row[key]) ? Number(row[key]) : 0), 0);
+}
+
+function renderDailyTracking(rows) {
+  const allRows = Array.isArray(rows) ? rows : [];
+  const displayRows = allRows.filter(r => String(r.validation_date || "") >= DAILY_TRACKING_START);
+  const t = $("dailyTrackingTable");
+  if (!displayRows.length) {
+    $("dailyTrackingMeta").textContent = `${DAILY_TRACKING_START} 之後沒有日常追蹤紀錄。`;
+    ["dailyDays","dailyPred","dailyActual","dailyTP","dailyCT","dailyFP","dailyFN","dailyPR"].forEach(id => $(id).textContent = "-");
+    t.innerHTML = '<tr><td class="empty">沒有 5/19 之後的日常追蹤紀錄。</td></tr>';
+    return;
+  }
+
+  const validatedRows = displayRows.filter(r => isNumericValue(r.actual_count));
+  const pendingRows = displayRows.length - validatedRows.length;
+  const latestValidatedDate = validatedRows.reduce((latest, row) => {
+    const d = String(row.validation_date || "");
+    return d > latest ? d : latest;
+  }, "");
+  const staleMissingRows = displayRows.filter(
+    r => !isNumericValue(r.actual_count) && String(r.validation_date || "") < latestValidatedDate
+  );
+  const predicted = sumNumeric(displayRows, "predicted_count");
+  const actual = sumNumeric(validatedRows, "actual_count");
+  const tp = sumNumeric(validatedRows, "tp");
+  const conditionalTrue = sumNumeric(validatedRows, "conditional_true");
+  const fp = sumNumeric(validatedRows, "fp");
+  const fn = sumNumeric(validatedRows, "fn");
+  const precisionDenom = tp + conditionalTrue + fp;
+  const recallDenom = tp + fn;
+  const precision = precisionDenom ? (tp + conditionalTrue) / precisionDenom : null;
+  const recall = recallDenom ? tp / recallDenom : null;
+
+  $("dailyDays").textContent = `${displayRows.length}`;
+  $("dailyPred").textContent = dash(predicted);
+  $("dailyActual").textContent = validatedRows.length ? dash(actual) : "-";
+  $("dailyTP").textContent = validatedRows.length ? dash(tp) : "-";
+  $("dailyCT").textContent = validatedRows.length ? dash(conditionalTrue) : "-";
+  $("dailyFP").textContent = validatedRows.length ? dash(fp) : "-";
+  $("dailyFN").textContent = validatedRows.length ? dash(fn) : "-";
+  $("dailyPR").textContent = `${pct(precision)} / ${pct(recall)}`;
+  const missingText = staleMissingRows.length ? `，缺盤後比對 ${staleMissingRows.length} 天` : "";
+  $("dailyTrackingMeta").textContent = `${DAILY_TRACKING_START} 起日常留存｜已比對 ${validatedRows.length} 天，待公告 / 待比對 ${pendingRows - staleMissingRows.length} 天${missingText}｜資料來源：prediction_snapshot / workbench_validation_log`;
+
+  t.innerHTML = `<colgroup>
+    <col style="width:9%"><col style="width:9%"><col style="width:7%"><col style="width:7%">
+    <col style="width:6%"><col style="width:11%"><col style="width:5%"><col style="width:5%">
+    <col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:17%">
+  </colgroup><thead><tr>
+    <th>日期</th><th>基準日</th><th class="num">候選</th><th class="num">正式</th>
+    <th class="num">TP</th><th class="num">Conditional True</th><th class="num">FP</th><th class="num">FN</th>
+    <th class="num">Precision</th><th class="num">Recall</th><th>狀態</th><th>寫入時間</th>
+  </tr></thead><tbody>${displayRows.map(r => {
+    const validated = isNumericValue(r.actual_count);
+    const staleMissing = !validated && String(r.validation_date || "") < latestValidatedDate;
+    const status = validated
+      ? '<span class="tag ok">已比對</span>'
+      : staleMissing
+        ? '<span class="tag bad">缺盤後比對</span>'
+        : '<span class="tag pending">待公告 / 待比對</span>';
+    return `<tr>
+      <td><a class="date-link" href="/?date=${encodeURIComponent(r.validation_date)}">${r.validation_date}</a></td><td>${r.base_date || ""}</td><td class="num">${dash(r.predicted_count)}</td><td class="num">${dash(r.actual_count)}</td>
+      <td class="num">${dash(r.tp)}</td><td class="num">${dash(r.conditional_true)}</td><td class="num">${dash(r.fp)}</td><td class="num">${dash(r.fn)}</td>
+      <td class="num">${pct(r.precision_conditional_correct)}</td><td class="num">${pct(r.recall)}</td><td>${status}</td><td>${fmtTime(r.created_at)}</td>
+    </tr>`;
+  }).join("")}</tbody>`;
+}
+
+function historySortValue(row, key) {
+  if (key === "validation_date") return row.validation_date || "";
+  if (key === "base_date") return row.base_date || "";
+  if (key === "created_at") return row.created_at || "";
+  if (key === "precision_conditional_correct" || key === "recall") {
+    return Number.isFinite(Number(row[key])) ? Number(row[key]) : -Infinity;
+  }
+  const v = row[key];
+  return Number.isFinite(Number(v)) ? Number(v) : (v || "");
+}
+
+function sortHistoryRows(rows) {
+  if (!historySort.key || !historySort.dir) return rows;
+  const factor = historySort.dir === "asc" ? 1 : -1;
+  return [...rows].sort((a, b) => {
+    const av = historySortValue(a.item, historySort.key);
+    const bv = historySortValue(b.item, historySort.key);
+    if (typeof av === "number" && typeof bv === "number") return (av - bv) * factor || a.index - b.index;
+    return String(av).localeCompare(String(bv), "zh-Hant", { numeric:true }) * factor || a.index - b.index;
+  });
+}
+
+function historySortableHeader(key, label, cls="") {
+  const dir = historySort.key === key ? (historySort.dir || "") : "";
+  return `<th class="sortable ${cls}" data-history-sort-key="${key}" data-sort-dir="${dir}">${label}</th>`;
+}
+
+function cycleHistorySort(key) {
+  if (historySort.key !== key) {
+    historySort = { key, dir:"desc" };
+  } else if (historySort.dir === "desc") {
+    historySort = { key, dir:"asc" };
+  } else if (historySort.dir === "asc") {
+    historySort = { key:null, dir:null };
+  } else {
+    historySort = { key, dir:"desc" };
+  }
+  loadBacktest().catch(() => {});
+}
+
+function renderBacktest(data) {
+  const run = data && data.run;
+  const rows = (data && data.rows) || [];
+  if (!run) {
+    $("backtestMeta").textContent = "尚無 backtest 紀錄。";
+    ["btPred","btActual","btTP","btCT","btFP","btFN","btPR"].forEach(id => $(id).textContent = "-");
+    $("historyTable").innerHTML = '<tr><td class="empty">沒有 backtest 明細。</td></tr>';
+    return;
+  }
+  const s = run.summary || {};
+  const state = runStatusText(run.status);
+  const total = s.planned_writes ?? s.planned_days;
+  const done = s.days_processed ?? rows.length;
+  const skipped = Number(s.skipped || 0);
+  const progress = total ? `${done}/${total}` : `${done}`;
+  $("backtestMeta").textContent = `${run.run_id}｜${state}｜${run.start_date} ~ ${run.end_date}｜${progress} 個交易日${skipped ? `，略過 ${skipped}` : ""}｜${fmtTime(run.created_at)}`;
+  $("btPred").textContent = dash(s.predicted);
+  $("btActual").textContent = dash(s.actual);
+  $("btTP").textContent = dash(s.tp);
+  $("btCT").textContent = dash(s.conditional_true);
+  $("btFP").textContent = dash(s.fp);
+  $("btFN").textContent = dash(s.fn);
+  $("btPR").textContent = `${pct(s.precision_conditional_correct)} / ${pct(s.recall)}`;
+  const t = $("historyTable");
+  if (!rows.length) {
+    t.innerHTML = '<tr><td class="empty">沒有 backtest 明細。</td></tr>';
+    return;
+  }
+  const displayRows = sortHistoryRows(rows.map((item, index) => ({ item, index }))).map(x => x.item);
+  t.innerHTML = `<colgroup>
+    <col style="width:11%"><col style="width:10%"><col style="width:7%"><col style="width:7%">
+    <col style="width:7%"><col style="width:12%"><col style="width:6%"><col style="width:6%">
+    <col style="width:8%"><col style="width:8%"><col style="width:18%">
+  </colgroup><thead><tr>
+    ${historySortableHeader("validation_date", "日期")}${historySortableHeader("base_date", "基準日")}${historySortableHeader("predicted_count", "候選", "num")}${historySortableHeader("actual_count", "正式", "num")}
+    ${historySortableHeader("tp", "TP", "num")}${historySortableHeader("conditional_true", "Conditional True", "num")}${historySortableHeader("fp", "FP", "num")}${historySortableHeader("fn", "FN", "num")}
+    ${historySortableHeader("precision_conditional_correct", "Precision", "num")}${historySortableHeader("recall", "Recall", "num")}${historySortableHeader("created_at", "寫入時間")}
+  </tr></thead><tbody>${displayRows.map(r => `<tr>
+    <td><a class="date-link" href="/?date=${encodeURIComponent(r.validation_date)}${selectedBacktestRunId ? `&run_id=${encodeURIComponent(selectedBacktestRunId)}` : ""}">${r.validation_date}</a></td><td>${r.base_date}</td><td class="num">${dash(r.predicted_count)}</td><td class="num">${dash(r.actual_count)}</td>
+    <td class="num">${dash(r.tp)}</td><td class="num">${dash(r.conditional_true)}</td><td class="num">${dash(r.fp)}</td><td class="num">${dash(r.fn)}</td>
+    <td class="num">${pct(r.precision_conditional_correct)}</td><td class="num">${pct(r.recall)}</td><td>${fmtTime(r.created_at)}</td>
+  </tr>`).join("")}</tbody>`;
+  t.querySelectorAll("th.sortable").forEach(th => {
+    th.onclick = () => cycleHistorySort(th.dataset.historySortKey);
+  });
+}
+
+function runStatusText(status) {
+  if (status === "running") return "執行中";
+  if (status === "paused") return "暫停";
+  if (status === "interrupted") return "已中斷";
+  if (status === "failed") return "失敗";
+  if (status === "ok") return "完成";
+  return status || "未知";
+}
+
+function backtestRunLabel(run) {
+  const s = run.summary || {};
+  const done = s.days_processed ?? 0;
+  const total = s.planned_writes ?? s.planned_days;
+  const skipped = Number(s.skipped || 0);
+  const days = total ? `${done}/${total}` : (done || "-");
+  const state = runStatusText(run.status);
+  const skippedText = skipped ? `，略過 ${skipped}` : "";
+  return `${run.end_date} 往回｜${state}｜${days}${skippedText} 天｜${fmtTime(run.created_at)}`;
+}
+
+async function loadBacktestRuns() {
+  const data = await api("/api/backtest/runs?limit=20");
+  const runs = data.runs || [];
+  const sel = $("backtestRunSelect");
+  sel.innerHTML = runs.map(r => `<option value="${r.run_id}">${backtestRunLabel(r)}</option>`).join("");
+  if (!runs.length) {
+    selectedBacktestRunId = "";
+    return;
+  }
+  if (!selectedBacktestRunId || !runs.some(r => r.run_id === selectedBacktestRunId)) {
+    selectedBacktestRunId = runs[0].run_id;
+  }
+  sel.value = selectedBacktestRunId;
+}
+
+async function loadBacktest() {
+  await loadBacktestRuns();
+  const suffix = selectedBacktestRunId ? `&run_id=${encodeURIComponent(selectedBacktestRunId)}` : "";
+  const data = await api(`/api/backtest/latest?limit=${BACKTEST_HISTORY_LIMIT}${suffix}`);
+  renderBacktest(data);
+}
+
+async function loadDates(selected) {
+  const data = await api("/api/workbench/dates");
+  knownDates = data.dates || [];
+  if (selected) $("recordDate").value = selected;
+  else if (knownDates.length && !$("recordDate").value) $("recordDate").value = knownDates[0];
+  return knownDates;
+}
+
+function todayIso() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+async function getDefaultWorkbenchDate() {
+  // Codex 2026-05-11 09:08 +08:00: the backend owns trading-day defaults.
+  // Trading days open on today; holidays open on the latest completed trading day.
+  const data = await api("/api/workbench/default-date");
+  defaultWorkbenchDate = data.date || todayIso();
+  return defaultWorkbenchDate;
+}
+
+async function loadPredictions(date) {
+  setBusy(true);
+  try {
+    const params = new URLSearchParams();
+    if (date) params.set("date", date);
+    if (selectedBacktestRunId) params.set("run_id", selectedBacktestRunId);
+    const url = `/api/workbench/predictions${params.toString() ? `?${params.toString()}` : ""}`;
+    const data = await api(url);
+    renderPredictions(data.rows);
+    if (data.date) $("recordDate").value = data.date;
+  } catch (e) {
+    setButtonText("讀取失敗");
+    resetButtonTextSoon();
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function refreshWorkbench() {
+  setBusy(true, true);
+  setWorkflowHintMessage("");
+  try {
+    // Codex 2026-05-11 09:08 +08:00: Refresh respects the selected date.
+    // The page only defaults to today on boot; deliberate historical refresh is allowed.
+    const d = $("recordDate").value || defaultWorkbenchDate || await getDefaultWorkbenchDate();
+    const data = await api(`/api/workbench/refresh?date=${encodeURIComponent(d)}`, { method:"POST" });
+    if (data.mode === "morning") {
+      setWorkflowHintMessage("");
+      renderPredictions(data.rows);
+      await loadDates(data.prediction_date);
+      $("recordDate").value = data.prediction_date;
+      renderDaySummary(data.count ?? data.rows?.length ?? 0);
+      setValidationSummary(null);
+      renderValidation([], []);
+      return;
+    }
+    if (data.mode === "blocked") {
+      const gateText = data.gate ? describeDataGate(data.gate) : "";
+      setWorkflowHintMessage([data.message, gateText].filter(Boolean).join(" "));
+      setButtonText("資料未完整");
+      resetButtonTextSoon();
+      if (data.date) {
+        await loadDates(data.date);
+        $("recordDate").value = data.date;
+        await loadPredictions(data.date);
+        await loadValidation(data.date);
+      }
+      return;
+    }
+    if (data.mode === "waiting") {
+      setWorkflowHintMessage(data.message || "");
+      if (data.date) {
+        await loadDates(data.date);
+        $("recordDate").value = data.date;
+        await loadPredictions(data.date);
+        await loadValidation(data.date);
+      }
+      return;
+    }
+    setWorkflowHintMessage("");
+    if (data.date) {
+      await loadDates(data.date);
+      $("recordDate").value = data.date;
+      await loadPredictions(data.date);
+    }
+    renderSummary(data.summary);
+    setValidationSummary(data.summary);
+    renderValidation(data.details, data.fn_rows);
+    await loadHistory(false);
+  } catch (e) {
+    setButtonText("Refresh 失敗");
+    resetButtonTextSoon();
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function loadHistory(showLog=true) {
+  try {
+    const dailyData = await api("/api/workbench/history?limit=120");
+    renderDailyTracking(dailyData);
+    if (activePage === "history") {
+      await loadBacktest();
+    } else {
+      renderHistory(dailyData);
+    }
+  } catch (e) {
+    if (showLog) {
+      setButtonText("讀取失敗");
+      resetButtonTextSoon();
+    }
+  }
+}
+
+setInterval(() => {
+  if (activePage === "history") {
+    loadHistory(false).catch(() => {});
+  }
+}, 10000);
+
+async function loadValidation(date) {
+  const params = new URLSearchParams();
+  if (date) params.set("date", date);
+  if (selectedBacktestRunId) params.set("run_id", selectedBacktestRunId);
+  const url = `/api/workbench/validation${params.toString() ? `?${params.toString()}` : ""}`;
+  const data = await api(url);
+  if (data.summary) {
+    renderSummary(data.summary);
+    setValidationSummary(data.summary);
+    renderValidation(data.details, data.fn_rows);
+  } else {
+    renderDaySummary(currentPredictionCount ?? 0);
+    setValidationSummary(null);
+    renderValidation([], []);
+  }
+}
+
+async function loadSelectedDate() {
+  const d = $("recordDate").value;
+  if (!d) return;
+  if (activePage === "history") {
+    showPage("workbench");
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }
+  setBusy(true);
+  try {
+    const params = new URLSearchParams();
+    params.set("date", d);
+    if (selectedBacktestRunId) params.set("run_id", selectedBacktestRunId);
+    history.replaceState(null, "", `?${params.toString()}`);
+    await loadPredictions(d);
+    await loadValidation(d);
+  } catch (e) {
+    setButtonText("切換失敗");
+    resetButtonTextSoon();
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function boot() {
+  try {
+    const h = await api("/api/health");
+    $("server").textContent = h.status === "ok" ? "✅ server OK" : `⚠️ server ${h.status}`;
+  } catch {
+    $("server").textContent = "❌ server offline";
+  }
+  try {
+    const requestedDate = new URLSearchParams(window.location.search).get("date");
+    selectedBacktestRunId = new URLSearchParams(window.location.search).get("run_id") || "";
+    await loadDates(requestedDate || await getDefaultWorkbenchDate());
+    const d = $("recordDate").value;
+    if (d) {
+      await loadPredictions(d);
+      await loadValidation(d);
+    } else {
+      renderCombined();
+    }
+    await loadHistory(false);
+    if (new URLSearchParams(window.location.search).get("page") === "history") {
+      showPage("history");
+    }
+  } catch (e) {
+    setButtonText("初始化失敗");
+    resetButtonTextSoon();
+  }
+}
+
+$("refreshBtn").onclick = refreshWorkbench;
+$("recordDate").onchange = loadSelectedDate;
+$("workbenchTab").onclick = () => showPage("workbench");
+$("historyTab").onclick = () => showPage("history");
+$("backtestRunSelect").onchange = async () => {
+  selectedBacktestRunId = $("backtestRunSelect").value;
+  await loadBacktest();
+};
+boot();
+</script>
+
+<style>
+#__gate{position:fixed;inset:0;background:#0b1220;z-index:99999;display:flex;
+  align-items:center;justify-content:center;flex-direction:column;gap:14px;font-family:sans-serif;color:#e6edf6}
+#__gate input{padding:10px 14px;border-radius:8px;border:1px solid #33415a;background:#111a2b;color:#fff;font-size:16px}
+#__gate button{padding:10px 18px;border-radius:8px;border:0;background:#2d6cdf;color:#fff;font-size:16px;cursor:pointer}
+#__gate .err{color:#ff7a7a;font-size:13px;min-height:16px}
+</style>
+<div id="__gate">
+  <div style="font-size:20px;font-weight:700">處置預測&結果</div>
+  <div style="font-size:13px;opacity:.7">請輸入密碼</div>
+  <input id="__pw" type="password" autofocus onkeydown="if(event.key==='Enter')__check()"/>
+  <button onclick="__check()">進入</button>
+  <div class="err" id="__err"></div>
+</div>
+<script>
+const __HASH="e3fce6474dec5751ab28d73c872ceb23f825b265b553775e108e16b28f3d98db";
+async function __sha(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
+  return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+async function __check(){const v=document.getElementById('__pw').value;
+  if(await __sha(v)===__HASH){sessionStorage.setItem('__ok','1');document.getElementById('__gate').remove();}
+  else{document.getElementById('__err').textContent='密碼錯誤';}}
+if(sessionStorage.getItem('__ok')==='1'){const g=document.getElementById('__gate');if(g)g.remove();}
+</script>
+
+</body>
+</html>
